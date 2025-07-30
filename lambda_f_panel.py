@@ -5,25 +5,14 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
 
-# --- Firebase Bağlantısı ---
-# Bu fonksiyon, bağlantının sadece bir kere kurulmasını sağlar.
-@st.cache_resource
-def init_firebase():
-    # secrets.toml dosyasından Firebase key'ini okumak için
-    # st.secrets kullanarak daha güvenli bir yöntem izliyoruz.
-    # Streamlit Cloud'a deploy ederken bu key'i oradaki arayüze girebilirsiniz.
-    # Lokal'de çalışırken projenizin ana dizininde .streamlit/secrets.toml dosyası oluşturun.
-    try:
-        creds = credentials.Certificate(dict(st.secrets["firebase_credentials"]))
-        firebase_admin.initialize_app(creds)
-    except Exception as e:
-        # Eğer zaten başlatılmışsa hata vermemesi için
-        if not firebase_admin._apps:
-            st.error(f"Firebase başlatılamadı. Hata: {e}")
-            st.warning("Lütfen .streamlit/secrets.toml dosyasını doğru yapılandırdığınızdan emin olun.")
-    return firestore.client()
+if not firebase_admin._apps:
+    secrets_dict = st.secrets["firebase_key"]
+    firebase_creds_copy = dict(secrets_dict)
+    firebase_creds_copy['private_key'] = firebase_creds_copy['private_key'].replace('\\n', '\n')
+    cred = credentials.Certificate(firebase_creds_copy)
+    firebase_admin.initialize_app(cred)
 
-db = init_firebase()
+db = firestore.client()
 
 # --- Veri Çekme Fonksiyonu (GÜNCELLENDİ) ---
 @st.cache_data(ttl=600) # Veriyi 10 dakika cache'le
