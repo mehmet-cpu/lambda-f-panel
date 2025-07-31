@@ -2,3 +2,4 @@ streamlit
 firebase-admin
 matplotlib
 pandas
+plotly
